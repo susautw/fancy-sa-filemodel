@@ -1,2 +1,2 @@
 # fancy-sa-filemodel
-A solution stores files to various storage
+A sqlalchemy extension to store files to various storage and maintain the file integrity.
