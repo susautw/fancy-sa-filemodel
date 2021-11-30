@@ -22,20 +22,22 @@ class StorageManager:
 
         self._bind_events = [
             # (callable, target, propagate)
-            (self.after_begin, Session, False),
+            (self.after_transaction_create, Session, False),
             (self.before_insert, FileModel, True),
             (self.before_update, FileModel, True),
             (self.after_delete, FileModel, True),
             (self.after_commit, Session, False),
-            (self.after_rollback, Session, False)
+            (self.after_rollback, Session, False),
+            (self.after_transaction_end, Session, False)
         ]
 
         for event_, cls_, propagate in self._bind_events:
             event.listen(cls_, event_.__name__, event_, propagate=propagate)
 
-    def after_begin(self, session: Session, _transaction: SessionTransaction, _connection) -> None:
-        meta = self._get_session_metadata(session)
-        meta.context_stack = OperationContext(parent=meta.context_stack)
+    def after_transaction_create(self, session: Session, transaction: SessionTransaction) -> None:
+        if transaction.parent is None or transaction.nested:
+            meta = self._get_session_metadata(session)
+            meta.context_stack = OperationContext(parent=meta.context_stack)
 
     def before_insert(self, _mapper, _connection, target: FileModel) -> None:
         meta = self._get_session_metadata(inspect(target).session)
@@ -56,13 +58,20 @@ class StorageManager:
 
     def after_commit(self, session: Session):
         meta = self._get_session_metadata(session)
-        meta.context_stack.commit()
-        self.pop_context(meta, session)
+        meta.context_stack.committed = True
 
     def after_rollback(self, session: Session):
         meta = self._get_session_metadata(session)
-        meta.context_stack.rollback()
-        self.pop_context(meta, session)
+        meta.context_stack.rolled_back = True
+
+    def after_transaction_end(self, session: Session, transaction: SessionTransaction) -> None:
+        if transaction.parent is None or transaction.nested:
+            meta = self._get_session_metadata(session)
+            if meta.context_stack.rolled_back:
+                meta.context_stack.rollback()
+            elif meta.context_stack.committed:
+                meta.context_stack.commit()
+            self.pop_context(meta, session)
 
     def pop_context(self, meta: _SessionMetadata, session: Session):
         if meta.context_stack.is_top():

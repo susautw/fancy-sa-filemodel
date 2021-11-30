@@ -41,7 +41,7 @@ class Update(Operation):
         self._storage.rename(self._file, self._new_name)
 
     def undo(self):
-        current_file = self._file.get_meta().file
+        current_file = self._file.get_model().file
         self._storage.rename(current_file, self._file.get_name())
 
 

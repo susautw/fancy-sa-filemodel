@@ -6,6 +6,8 @@ from . import operation
 class OperationContext:
     _operations: list[operation.Operation]
     _parent: "OperationContext" = None
+    committed: bool = False
+    rolled_back: bool = False
 
     def __init__(self, parent: "OperationContext" = None):
         self._operations = []

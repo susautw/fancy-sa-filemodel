@@ -1,4 +1,4 @@
-from .file_meta import FileModel
+from .file_model import FileModel
 from .storage import Storage, FileStorage
 from . import operation
 from .operation_context import OperationContext

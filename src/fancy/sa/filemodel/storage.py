@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from copy import copy
 from pathlib import Path
 from shutil import copyfileobj
-from typing import Union, TextIO, BinaryIO, TYPE_CHECKING
+from typing import TYPE_CHECKING, IO
 
 if TYPE_CHECKING:
     from . import File
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class Storage(ABC):
     @abstractmethod
-    def get_stream(self, file: "File") -> Union[TextIO, BinaryIO]:
+    def get_stream(self, file: "File") -> IO:
         """
         :raises OSError
         """
@@ -42,7 +42,7 @@ class FileStorage(Storage):
         self._base_path = base_path
         self._seek_to_start_before_store = seek_to_start_before_store
 
-    def get_stream(self, file: "File") -> Union[TextIO, BinaryIO]:
+    def get_stream(self, file: "File") -> IO:
         mode = 'rb' if file.is_binary else 'r'
         return (self._base_path / file.get_name()).open(mode)
 
@@ -62,5 +62,5 @@ class FileStorage(Storage):
         (self._base_path / file.get_name()).rename(name)
         new_file = copy(file)
         new_file.rename(name)
-        file.get_meta().file = new_file
+        file.get_model().file = new_file
         return new_file

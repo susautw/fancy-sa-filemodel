@@ -1,22 +1,21 @@
-from typing import Optional, Union, TextIO, BinaryIO
+from typing import Optional, IO
 
 from . import Storage, StorageManager, FileModel
 
 
 class File:
     _storage: Storage
-    _stream: Optional[Union[TextIO, BinaryIO]] = None
+    _stream: Optional[IO] = None
     _name: str
-    is_binary: bool
-    _meta: FileModel
+    _model: FileModel
 
     def __init__(
             self,
             name: str,
-            meta: FileModel,
-            stream: Union[TextIO, BinaryIO] = None,
+            model: FileModel,
+            stream: IO = None,
             storage: Storage = None,
-            *, is_binary: bool = False
+            *, is_binary: bool
     ):
         self._name = name
         self._stream = stream
@@ -24,7 +23,7 @@ class File:
             storage = StorageManager.get_instance().storage
         self._storage = storage
         self.is_binary = is_binary
-        self._meta = meta
+        self._model = model
 
     def get_name(self) -> str:
         return self._name
@@ -32,10 +31,10 @@ class File:
     def rename(self, name: str) -> None:
         self._name = name
 
-    def get_stream(self) -> Union[TextIO, BinaryIO]:
+    def get_stream(self) -> IO:
         if self._stream is None:
             self._stream = self._storage.get_stream(self)
         return self._stream
 
-    def get_meta(self) -> FileModel:
-        return self._meta
+    def get_model(self) -> FileModel:
+        return self._model
