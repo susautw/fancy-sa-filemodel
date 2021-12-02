@@ -53,7 +53,8 @@ class FileStorage(Storage):
             raise FileExistsError(fn)
         if self._seek_to_start_before_store and file.get_stream().seekable():
             file.get_stream().seek(0)
-        copyfileobj(file.get_stream(), fn.open(mode))
+        with fn.open(mode) as fp:
+            copyfileobj(file.get_stream(), fp)
 
     def delete(self, file: "File", missing_ok=False) -> None:
         (self._base_path / file.get_name()).unlink(missing_ok=missing_ok)
