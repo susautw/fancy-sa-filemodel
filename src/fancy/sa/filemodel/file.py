@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 
 from . import Storage, StorageManager, FileModel
@@ -29,9 +28,6 @@ class File:
 
     def get_name(self) -> str:
         return self._name
-
-    def get_path(self) -> Path:
-        return Path(self.get_name())
 
     def rename(self, name: str) -> None:
         self._name = name

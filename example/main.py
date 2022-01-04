@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from typing import Optional, Union, TextIO, BinaryIO, IO
+from typing import Optional, Union
 
 from sqlalchemy import Column, Integer, String, create_engine, select, Boolean
 from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker, Session
@@ -82,9 +82,9 @@ class File(Base, filemodel.FileModel):
     ext = Column(String(10), nullable=False)
     binary = Column(Boolean, nullable=False)
 
-    _fp: IO = None
+    _fp: filemodel.Stream = None
 
-    def __init__(self, fp: IO, **kwargs):
+    def __init__(self, fp: filemodel.Stream, **kwargs):
         self._fp = fp
         binary: bool = kwargs.pop("binary", isinstance(fp.read(0), bytes))
         super(File, self).__init__(binary=binary, **kwargs)
@@ -92,7 +92,7 @@ class File(Base, filemodel.FileModel):
     def generate_filename(self) -> str:
         return f'{self.name}.{self.ext}'
 
-    def init_stream(self) -> Optional[IO]:
+    def init_stream(self) -> Optional[filemodel.Stream]:
         return self._fp
 
     def is_binary(self) -> bool:
