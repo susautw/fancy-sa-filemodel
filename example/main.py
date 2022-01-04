@@ -3,13 +3,13 @@ from pathlib import Path
 from typing import Optional, Union, TextIO, BinaryIO, IO
 
 from sqlalchemy import Column, Integer, String, create_engine, select, Boolean
-from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
+from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker, Session
 
 from fancy.sa import filemodel
 
 Base = declarative_base()
 
-session = scoped_session(sessionmaker())
+session: Union[Session, scoped_session] = scoped_session(sessionmaker())
 
 
 def main():
@@ -64,7 +64,6 @@ def create_files(fn: Path):
                     session.add(file4)
                     session.rollback()
                 session.add(file2)
-
 
 
 def get_arg_parser() -> argparse.ArgumentParser:

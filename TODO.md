@@ -1,0 +1,1 @@
+- storage lock: for thread-safe (only one thread can operate the storage at a time)

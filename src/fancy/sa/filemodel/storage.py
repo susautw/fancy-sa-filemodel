@@ -1,8 +1,9 @@
 from abc import abstractmethod, ABC
 from copy import copy
+from datetime import datetime
 from pathlib import Path
 from shutil import copyfileobj
-from typing import TYPE_CHECKING, IO
+from typing import TYPE_CHECKING, IO, Optional
 
 if TYPE_CHECKING:
     from . import File
@@ -22,7 +23,19 @@ class Storage(ABC):
         """
 
     @abstractmethod
+    def mark_as_deleted(self, file: "File", missing_ok=False) -> None:
+        """
+        :raises OSError
+        """
+
+    @abstractmethod
     def delete(self, file: "File", missing_ok=False) -> None:
+        """
+        :raises OSError
+        """
+
+    @abstractmethod
+    def unmark_delete(self, file: "File", missing_ok=True) -> None:
         """
         :raises OSError
         """
@@ -36,11 +49,22 @@ class Storage(ABC):
 
 class FileStorage(Storage):
     _base_path: Path
+    _tmp_deleted_path: Path
+    _deleted_path: Optional[Path]
     _seek_to_start_before_store: bool
+    _rename_instead_delete: bool
 
-    def __init__(self, base_path: Path, seek_to_start_before_store=True):
-        self._base_path = base_path
+    def __init__(self, base_path: Path, seek_to_start_before_store=True, rename_instead_delete: bool = False):
+        self._base_path = self.get_directory(base_path)
+        self._tmp_deleted_path = self.get_directory(base_path / "tmp_deleted")
+        if rename_instead_delete:
+            self._deleted_path = self.get_directory(base_path / "deleted")
         self._seek_to_start_before_store = seek_to_start_before_store
+        self._rename_instead_delete = rename_instead_delete
+
+    def get_directory(self, target: Path) -> Path:
+        target.mkdir(parents=True, exist_ok=True)
+        return target
 
     def get_stream(self, file: "File") -> IO:
         mode = 'rb' if file.is_binary else 'r'
@@ -56,8 +80,32 @@ class FileStorage(Storage):
         with fn.open(mode) as fp:
             copyfileobj(file.get_stream(), fp)
 
+    def mark_as_deleted(self, file: "File", missing_ok=False) -> None:
+        try:
+            (self._base_path / file.get_name()).rename(self._tmp_deleted_path / file.get_name())
+        except FileNotFoundError:
+            if not missing_ok:
+                raise
+
     def delete(self, file: "File", missing_ok=False) -> None:
-        (self._base_path / file.get_name()).unlink(missing_ok=missing_ok)
+        try:
+            tmp_deleted = self._tmp_deleted_path / file.get_name()
+            if self._rename_instead_delete:
+                tmp_deleted.rename(
+                    self._deleted_path / f"deleted_at_{datetime.now().isoformat(timespec='seconds')}_{file.get_name()}"
+                )
+            else:
+                tmp_deleted.unlink()
+        except FileNotFoundError:
+            if not missing_ok:
+                raise
+
+    def unmark_delete(self, file: "File", missing_ok=True) -> None:
+        try:
+            (self._tmp_deleted_path / file.get_name()).rename(self._base_path / file.get_name())
+        except FileNotFoundError:
+            if not missing_ok:
+                raise
 
     def rename(self, file: "File", name: str) -> "File":
         (self._base_path / file.get_name()).rename(name)

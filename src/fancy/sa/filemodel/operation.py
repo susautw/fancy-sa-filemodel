@@ -53,5 +53,11 @@ class Delete(Operation):
         self._file = file
         self._storage = storage
 
+    def on_attach_context(self):
+        self._storage.mark_as_deleted(self._file, missing_ok=True)
+
     def do(self):
         self._storage.delete(self._file, missing_ok=True)
+
+    def undo(self):
+        self._storage.unmark_delete(self._file, missing_ok=True)
