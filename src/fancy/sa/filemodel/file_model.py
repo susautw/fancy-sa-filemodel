@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Optional, IO
+from typing import TYPE_CHECKING, Optional, Union, BinaryIO, TextIO
+
+Stream = Union[BinaryIO, TextIO]
 
 if TYPE_CHECKING:
     from . import File
@@ -6,7 +8,7 @@ if TYPE_CHECKING:
 
 class FileModel:
     _file: Optional["File"] = None
-    _stream: Optional[IO] = None
+    _stream: Optional[Stream] = None
 
     @property
     def file(self) -> "File":
@@ -15,7 +17,7 @@ class FileModel:
             self._file = File(
                 name=self.generate_filename(),
                 model=self,
-                stream=self._init_stream(),
+                stream=self.init_stream(),
                 is_binary=self.is_binary()
             )
         return self._file
@@ -32,7 +34,7 @@ class FileModel:
         """
         raise NotImplementedError()
 
-    def _init_stream(self) -> Optional[IO]:
+    def init_stream(self) -> Optional[Stream]:
         """
         Initialize the stream while creating a filemodel.File.
         `If the file model is loading from database, this method should return None.`
@@ -45,5 +47,5 @@ class FileModel:
         """
         raise NotImplementedError()
 
-    def get_stream(self) -> IO:
+    def get_stream(self) -> Stream:
         return self.file.get_stream()

@@ -57,7 +57,7 @@ class Delete(Operation):
         self._storage.mark_as_deleted(self._file, missing_ok=True)
 
     def do(self):
-        self._storage.delete(self._file, missing_ok=True)
+        self._storage.delete_marked(self._file, missing_ok=True)
 
     def undo(self):
         self._storage.unmark_delete(self._file, missing_ok=True)

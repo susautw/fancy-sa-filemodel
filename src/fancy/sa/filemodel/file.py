@@ -1,11 +1,13 @@
-from typing import Optional, IO
+from pathlib import Path
+from typing import Optional
 
 from . import Storage, StorageManager, FileModel
+from . import Stream
 
 
 class File:
     _storage: Storage
-    _stream: Optional[IO] = None
+    _stream: Optional[Stream] = None
     _name: str
     _model: FileModel
 
@@ -13,7 +15,7 @@ class File:
             self,
             name: str,
             model: FileModel,
-            stream: IO = None,
+            stream: Stream = None,
             storage: Storage = None,
             *, is_binary: bool
     ):
@@ -28,10 +30,13 @@ class File:
     def get_name(self) -> str:
         return self._name
 
+    def get_path(self) -> Path:
+        return Path(self.get_name())
+
     def rename(self, name: str) -> None:
         self._name = name
 
-    def get_stream(self) -> IO:
+    def get_stream(self) -> Stream:
         if self._stream is None:
             self._stream = self._storage.get_stream(self)
         return self._stream

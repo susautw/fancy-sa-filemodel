@@ -92,7 +92,7 @@ class File(Base, filemodel.FileModel):
     def generate_filename(self) -> str:
         return f'{self.name}.{self.ext}'
 
-    def _init_stream(self) -> Optional[IO]:
+    def init_stream(self) -> Optional[IO]:
         return self._fp
 
     def is_binary(self) -> bool:
