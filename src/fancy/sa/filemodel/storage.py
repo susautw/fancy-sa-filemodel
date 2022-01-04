@@ -167,5 +167,8 @@ class FileStorage(Storage):
                 return  # directory is not empty
             else:
                 parent_dir = directory.parent
-                directory.unlink(missing_ok=True)
+                try:
+                    directory.rmdir()
+                except FileNotFoundError:
+                    pass  # ignore
                 self._clean_directory_if_empty(parent_dir)
